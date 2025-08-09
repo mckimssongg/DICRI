@@ -4,13 +4,19 @@ import helmet from 'helmet';
 import cors from 'cors';
 import rateLimit from 'express-rate-limit';
 import pinoHttp from 'pino-http';
+import cookieParser from 'cookie-parser';
+import swaggerUi from 'swagger-ui-express';
+import { openApiSpec } from './docs/swagger';
 import { randomUUID } from 'crypto';
 import { createPool } from './db/pool';
 import { healthRouter } from './routes/health';
+import authRouter from './routes/auth'; 
 
 const app = express();
 
-const requestId = (req, _res, next) => {
+import { Request, Response, NextFunction } from 'express';
+
+const requestId = (req: Request, _res: Response, next: NextFunction) => {
   (req as any).requestId = (req.headers['x-request-id'] as string) || randomUUID();
   next();
 };
@@ -21,8 +27,13 @@ app.use(helmet());
 app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || true, credentials: true }));
 app.use(express.json({ limit: '5mb' }));
 app.use(rateLimit({ windowMs: 60_000, max: 100 }));
+app.use(cookieParser());
 
 app.use('/api/v1/health', healthRouter);
+app.use('/api/v1/auth', authRouter);
+
+app.get('/api-docs.json', (_req, res) => res.json(openApiSpec));
+app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
 
 const port = parseInt(process.env.PORT || '3000', 10);
 
