@@ -1,0 +1,56 @@
+services:
+  sqlserver:
+    image: mcr.microsoft.com/mssql/server:2022-latest
+    environment:
+      - ACCEPT_EULA=Y
+      - SA_PASSWORD=YourStrong!Passw0rd
+    ports:
+      - "1433:1433"
+    volumes:
+      - sql_data:/var/opt/mssql
+    healthcheck:
+      test: ["CMD", "/opt/mssql-tools/bin/sqlcmd", "-S", "localhost", "-U", "sa", "-P", "YourStrong!Passw0rd", "-Q", "SELECT 1"]
+      interval: 10s
+      timeout: 5s
+      retries: 10
+
+  api:
+    build:
+      context: ../dicri-backend
+    env_file:
+      - ../dicri-backend/.env
+    depends_on:
+      - sqlserver
+    ports:
+      - "3000:3000"
+
+  web:
+    build:
+      context: ../dicri-frontend
+    depends_on:
+      - api
+    ports:
+      - "5173:80"
+
+  # Optional services for later steps (placeholders now)
+  redis:
+    image: redis:7-alpine
+    ports: ["6379:6379"]
+
+  minio:
+    image: quay.io/minio/minio
+    command: server /data --console-address ":9001"
+    environment:
+      - MINIO_ROOT_USER=admin
+      - MINIO_ROOT_PASSWORD=adminadmin
+    ports: ["9000:9000", "9001:9001"]
+    volumes:
+      - minio_data:/data
+
+  mailhog:
+    image: mailhog/mailhog
+    ports: ["8025:8025"]
+
+volumes:
+  sql_data:
+  minio_data:
