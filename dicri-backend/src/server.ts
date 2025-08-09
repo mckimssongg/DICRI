@@ -11,6 +11,7 @@ import { randomUUID } from 'crypto';
 import { createPool } from './db/pool';
 import { healthRouter } from './routes/health';
 import authRouter from './routes/auth'; 
+import rbacRouter from './routes/rbac';
 
 const app = express();
 
@@ -31,9 +32,16 @@ app.use(cookieParser());
 
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
+app.use('/api/v1/rbac', rbacRouter);
 
 app.get('/api-docs.json', (_req, res) => res.json(openApiSpec));
-app.use('/docs', swaggerUi.serve, swaggerUi.setup(openApiSpec));
+app.use('/docs',
+  swaggerUi.serve,
+  swaggerUi.setup(openApiSpec, {
+    swaggerOptions: { persistAuthorization: true },
+  })
+);
+
 
 const port = parseInt(process.env.PORT || '3000', 10);
 
