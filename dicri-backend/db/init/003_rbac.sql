@@ -166,4 +166,14 @@ EXEC core.usp_Role_GrantPermission N'tecnico',     N'indicio.read';
 EXEC core.usp_Role_GrantPermission N'tecnico',     N'indicio.update';
 
 EXEC core.usp_Role_GrantPermission N'auditor',     N'reportes.read';
+
+EXEC core.usp_Permission_Create N'catalogs.read',  N'Ver catálogos';
+EXEC core.usp_Permission_Create N'catalogs.write', N'Administrar catálogos';
+EXEC core.usp_Permission_Create N'users.read',     N'Ver usuarios';
+EXEC core.usp_Permission_Create N'users.write',    N'Crear/editar usuarios';
+
+-- Grants por rol
+EXEC core.usp_Role_GrantPermission N'admin',       N'catalogs.write';
+EXEC core.usp_Role_GrantPermission N'admin',       N'users.write';
+EXEC core.usp_Role_GrantPermission N'coordinador', N'catalogs.read';
 GO

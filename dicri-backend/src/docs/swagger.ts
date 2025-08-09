@@ -12,6 +12,7 @@ export const openApiSpec: OpenAPIV3.Document = {
   components: {
     securitySchemes: {
       bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
+      cookieAuth: { type: "apiKey", in: "cookie", name: "refresh_token" }
     },
     schemas: {
       LoginRequest: {
@@ -68,6 +69,35 @@ export const openApiSpec: OpenAPIV3.Document = {
           role_id: { type: "integer" },
           role_key: { type: "string" },
           role_name: { type: "string" },
+        },
+      },
+      CatalogItem: {
+        type: "object",
+        properties: {
+          item_id: { type: "integer" },
+          catalog_key: { type: "string" },
+          code: { type: "string" },
+          label: { type: "string" },
+          is_active: { type: "boolean" },
+          sort_order: { type: "integer" },
+        },
+      },
+      CatalogCreateRequest: {
+        type: "object",
+        required: ["code", "label"],
+        properties: {
+          code: { type: "string" },
+          label: { type: "string" },
+          sort_order: { type: "integer", default: 0 },
+        },
+      },
+      CatalogUpdateRequest: {
+        type: "object",
+        required: ["label", "is_active", "sort_order"],
+        properties: {
+          label: { type: "string" },
+          is_active: { type: "boolean" },
+          sort_order: { type: "integer" },
         },
       },
     },
@@ -255,6 +285,97 @@ export const openApiSpec: OpenAPIV3.Document = {
             },
           },
           "401": { description: "No autorizado" },
+        },
+      },
+    },
+    "/api/v1/catalogs/{catalogKey}/items": {
+      get: {
+        tags: ["Catálogos"],
+        summary: "Lista items de un catálogo",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "catalogKey",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/CatalogItem" },
+                },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Catálogos"],
+        summary: "Crea item",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "catalogKey",
+            in: "path",
+            required: true,
+            schema: { type: "string" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CatalogCreateRequest" },
+            },
+          },
+        },
+        responses: { "201": { description: "Creado" } },
+      },
+    },
+    "/api/v1/catalogs/items/{itemId}": {
+      put: {
+        tags: ["Catálogos"],
+        summary: "Actualiza item",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "itemId",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CatalogUpdateRequest" },
+            },
+          },
+        },
+        responses: { "200": { description: "OK" } },
+      },
+      delete: {
+        tags: ["Catálogos"],
+        summary: "Elimina (soft) item",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "itemId",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "204": { description: "No Content" },
+          "404": { description: "No encontrado" },
         },
       },
     },

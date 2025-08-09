@@ -12,6 +12,7 @@ import { createPool } from './db/pool';
 import { healthRouter } from './routes/health';
 import authRouter from './routes/auth'; 
 import rbacRouter from './routes/rbac';
+import catalogsRouter from './routes/catalogs';
 
 const app = express();
 
@@ -33,6 +34,7 @@ app.use(cookieParser());
 app.use('/api/v1/health', healthRouter);
 app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/rbac', rbacRouter);
+app.use('/api/v1/catalogs', catalogsRouter);
 
 app.get('/api-docs.json', (_req, res) => res.json(openApiSpec));
 app.use('/docs',
@@ -41,7 +43,6 @@ app.use('/docs',
     swaggerOptions: { persistAuthorization: true },
   })
 );
-
 
 const port = parseInt(process.env.PORT || '3000', 10);
 
