@@ -4,6 +4,10 @@ import { z } from 'zod';
 import { getUserWithRoles, registerFailed, registerSuccess, verifyPassword } from '../services/auth';
 import { signAccess, signRefresh, verifyRefresh } from '../utils/jwt';
 import { authGuard } from '../middlewares/authGuard';
+import sql from 'mssql';
+import bcrypt from 'bcryptjs';
+import { getPool } from '../db/pool';
+import { sendMail } from '../services/mailer';
 
 export const authRouter = Router();
 
@@ -116,6 +120,51 @@ authRouter.post('/logout', (req, res) => {
 
 authRouter.get('/me', authGuard(), (req, res) => {
   return res.json({ user: req.auth });
+});
+
+const ResetRequestSchema = z.object({
+  username: z.string().min(3).max(64).optional(),
+  email: z.string().email().optional()
+}).refine(d => d.username || d.email, { message: 'username o email requerido' });
+
+authRouter.post('/reset/request', async (req, res) => {
+  const p = ResetRequestSchema.parse(req.body);
+  const r = await getPool().request()
+    .input('username', sql.NVarChar(64), p.username ?? null)
+    .input('email', sql.NVarChar(256), p.email ?? null)
+    .execute('core.usp_PasswordReset_Request');
+
+  // Mail con token (dev). Si no hubo usuario, r.recordset puede venir vacío.
+  const token = r.recordset?.[0]?.token as string | undefined;
+  if (token && p.email) {
+    const link = `http://localhost:5173/reset?token=${encodeURIComponent(token)}`;
+    await sendMail(p.email, 'Reset de contraseña', `<p>Usa este enlace para restablecer tu contraseña:</p><p><a href="${link}">${link}</a></p>`);
+  }
+
+  return res.status(202).json({ status: 'accepted' });
+});
+
+const ResetConfirmSchema = z.object({
+  token: z.string().min(10),
+  newPassword: z.string().min(8).max(128)
+    .regex(/^(?=.*[a-z])(?=.*[A-Z])(?=.*\d)(?=.*[^A-Za-z0-9]).+$/, 'Password débil')
+});
+
+authRouter.post('/reset/confirm', async (req, res) => {
+  const p = ResetConfirmSchema.parse(req.body);
+  const hash = await bcrypt.hash(p.newPassword, 10);
+
+  try {
+    const r = await getPool().request()
+      .input('token', sql.NVarChar(128), p.token)
+      .input('new_hash', sql.NVarChar(200), hash)
+      .execute('core.usp_PasswordReset_Consume');
+    return res.json({ status: 'ok' });
+  } catch (e) {
+    const msg = (e as any)?.message || '';
+    if (msg.includes('inválido o expirado')) return res.status(410).json({ error: 'Token inválido o expirado' });
+    return res.status(400).json({ error: 'No se pudo restablecer' });
+  }
 });
 
 export default authRouter;
