@@ -95,10 +95,45 @@ export const openApiSpec: OpenAPIV3.Document = {
         type: "object",
         required: ["label", "is_active", "sort_order"],
         properties: {
-          label: { type: "string" },
-          is_active: { type: "boolean" },
-          sort_order: { type: "integer" },
+          label: { type: "string", example: "Rojo intenso" },
+          is_active: { type: "boolean", example: true },
+          sort_order: { type: "integer", example: 10 },
         },
+      },
+      CreateUserRequest: {
+        type: "object",
+        required: ["username", "password", "email"],
+        properties: {
+          username: { type: "string", example: "coordinador1" },
+          password: { type: "string", example: "Str0ng!Pass" },
+          email: { type: "string", example: "coord1@mp.gob.gt" },
+          mfa_required: { type: "boolean", example: false },
+          roles: { type: "array", items: { type: "string" }, example: ["coordinador"] }
+        }
+      },
+      CreateUserResponse: {
+        type: "object",
+        properties: {
+          id: { type: "integer", example: 2 },
+          username: { type: "string", example: "coordinador1" },
+          email: { type: "string", example: "coord1@mp.gob.gt" },
+          roles: { type: "array", items: { type: "string" }, example: ["coordinador"] }
+        }
+      },
+      PasswordResetRequest: {
+        type: "object",
+        properties: {
+          username: { type: "string", example: "admin" },
+          email: { type: "string", example: "admin@mp.gob.gt" }
+        }
+      },
+      PasswordResetConfirm: {
+        type: "object",
+        required: ["token", "newPassword"],
+        properties: {
+          token: { type: "string", example: "reset-token-123" },
+          newPassword: { type: "string", example: "Nuev4!Clave" }
+        }
       },
     },
   },
@@ -378,6 +413,80 @@ export const openApiSpec: OpenAPIV3.Document = {
           "404": { description: "No encontrado" },
         },
       },
+    },
+    "/api/v1/users": {
+      post: {
+        tags: ["Usuarios"],
+        summary: "Crea usuario y asigna roles",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/CreateUserRequest" } }
+          }
+        },
+        responses: {
+          "201": {
+            description: "Creado",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/CreateUserResponse" } }
+            }
+          },
+          "400": {
+            description: "Datos inválidos",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset/request": {
+      post: {
+        tags: ["Auth"], security: [],
+        summary: "Solicita reset de contraseña (siempre 202)",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/PasswordResetRequest" } }
+          }
+        },
+        responses: {
+          "202": { description: "Enviado (o silenciado si no existe)" },
+          "400": {
+            description: "Datos inválidos",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
+    },
+    "/api/v1/auth/reset/confirm": {
+      post: {
+        tags: ["Auth"], security: [],
+        summary: "Confirma reset con token",
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": { schema: { $ref: "#/components/schemas/PasswordResetConfirm" } }
+          }
+        },
+        responses: {
+          "200": { description: "OK" },
+          "400": {
+            description: "Inválido",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          },
+          "410": {
+            description: "Expirado",
+            content: {
+              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
+            }
+          }
+        }
+      }
     },
   },
 };
