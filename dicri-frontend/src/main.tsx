@@ -22,8 +22,8 @@ import './styles.css'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },
-  { path: '/reset', element: <ResetPasswordPage /> },
-  { path: '/reset/request', element: <ResetRequestPage /> },
+  // { path: '/reset', element: <ResetPasswordPage /> },
+  // { path: '/reset/request', element: <ResetRequestPage /> },
   {
     path: '/',
     element: (

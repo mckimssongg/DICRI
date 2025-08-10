@@ -49,8 +49,8 @@ export function LoginPage() {
         {err && <div style={{ color:'crimson' }}>{err}</div>}
         <button className="btn primary" type="submit" disabled={loading}>{loading ? 'Entrando…' : 'Entrar'}</button>
         <div className="hstack" style={{ fontSize:12 }}>
-          <Link to="/reset/request">¿Olvidaste tu contraseña?</Link>
-          <Link to="/reset">Tengo un token</Link>
+          {/* <Link to="/reset/request">¿Olvidaste tu contraseña?</Link>
+          <Link to="/reset">Tengo un token</Link> */}
         </div>
       </form>
     </div>
