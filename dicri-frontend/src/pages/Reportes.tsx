@@ -15,8 +15,8 @@ export function ReportesPage() {
     try {
       const r = await api.get('/reportes/expedientes', { params: { desde: desde || undefined, hasta: hasta || undefined } });
       setData(r.data);
-  toast.push({ kind:'success', msg:'Reporte actualizado' });
-  } catch (e:any) { setErr(mapError(e)); }
+      toast.push({ kind:'success', msg:'Reporte actualizado' });
+    } catch (e:any) { setErr(mapError(e)); }
   }
 
   useEffect(() => { load(); }, []);
@@ -24,33 +24,31 @@ export function ReportesPage() {
   return (
     <div className="card" style={{ padding:16 }}>
       <h2 style={{ marginTop:0 }}>Reportes</h2>
-      <div className="hstack" style={{ marginBottom:12 }}>
-        Desde:
+    <div className="hstack" style={{ marginBottom:12, alignItems:'end', justifyContent:'center' }}>
+      <div className="field" style={{ minWidth:200 }}>
+        <span className="label">Desde</span>
         <input className="input" type="date" value={desde} onChange={e=>setDesde(e.target.value)} />
-        Hasta:
+      </div>
+      <div className="field" style={{ minWidth:200 }}>
+        <span className="label">Hasta</span>
         <input className="input" type="date" value={hasta} onChange={e=>setHasta(e.target.value)} />
-        <button className="btn" onClick={load}>Aplicar</button>
+      </div>
+      <button className="btn" onClick={load}>Aplicar</button>
       </div>
       {err && <div style={{ color:'crimson' }}>{err}</div>}
       {!data ? <div>Cargando…</div> : (
         <div style={{ display:'grid', gridTemplateColumns:'1fr 1fr', gap:16 }}>
           <div className="card" style={{ padding:12 }}>
-            <h3>Totales por estado</h3>
+            <h3 className="card-title">Totales por estado</h3>
             <Bars data={(data.byEstado||[]).map((x:any)=>({ label:x.estado, value:x.total }))} />
-          return (
-            <div className="card" style={{ padding:16 }}>
-              <h2 style={{ marginTop:0 }}>Reportes</h2>
-              <div className="hstack" style={{ marginBottom:12, alignItems:'end' }}>
-                <div className="field" style={{ minWidth:200 }}>
-                  <span className="label">Desde</span>
-                  <input className="input" type="date" value={desde} onChange={e=>setDesde(e.target.value)} />
-                </div>
-                <div className="field" style={{ minWidth:200 }}>
-                  <span className="label">Hasta</span>
-                  <input className="input" type="date" value={hasta} onChange={e=>setHasta(e.target.value)} />
-                </div>
-                <button className="btn" onClick={load}>Aplicar</button>
-              </div>
+          </div>
+          <div className="card" style={{ padding:12 }}>
+            <h3 className="card-title">Por sede (APROBADO/BORRADOR/EN_REVISION)</h3>
+            <PorSedeTable items={data.porSede||[]} />
+          </div>
+          <div className="card" style={{ padding:12, gridColumn:'1 / span 2' }}>
+            <h3 className="card-title">Detalle crudo</h3>
+            <pre style={{ maxHeight:320, overflow:'auto' }}>{JSON.stringify(data, null, 2)}</pre>
           </div>
         </div>
       )}
@@ -58,10 +56,10 @@ export function ReportesPage() {
   );
 }
 
-                  <div className="card" style={{ padding:12 }}>
-                    <h3>Por sede (APROBADO/BORRADOR/EN_REVISION)</h3>
-                    <PorSedeTable items={data.porSede||[]} />
-                  </div>
+function Bars({ data }:{ data:{ label:string; value:number }[] }){
+  const max = useMemo(()=>Math.max(1, ...data.map(d=>d.value||0)), [data]);
+  return (
+    <div style={{ display:'grid', gap:8 }}>
       {data.map((d,i)=>(
         <div key={i} className="hstack" style={{ alignItems:'center', gap:8 }}>
           <div style={{ width:120 }}>{d.label}</div>

@@ -31,7 +31,7 @@ export function DashboardPage() {
       <h2 style={{ marginTop:0 }}>Dashboard</h2>
       {hasPerm('reportes.read') ? (
         <div>
-          <h3>Resumen de expedientes</h3>
+          <h3 className="card-title">Resumen de expedientes</h3>
           {err && <div style={{ color:'crimson' }}>{err}</div>}
           {!data ? <div>Cargando…</div> : (
             <div style={{ display:'grid', gridTemplateColumns:'repeat(3, 1fr)', gap:16 }}>
@@ -39,11 +39,11 @@ export function DashboardPage() {
               <StatCard title="Borradores" value={(data.byEstado||[]).find((x:any)=>x.estado==='BORRADOR')?.total ?? 0} color="#2563eb" />
               <StatCard title="En revisión" value={(data.byEstado||[]).find((x:any)=>x.estado==='EN_REVISION')?.total ?? 0} color="#f59e0b" />
               <div className="card" style={{ gridColumn:'1 / span 2', padding:12 }}>
-                <h4>Por estado</h4>
+                <h4 className="card-title">Por estado</h4>
                 <Bars data={(data.byEstado||[]).map((x:any)=>({ label:x.estado, value:x.total }))} />
               </div>
               <div className="card" style={{ padding:12 }}>
-                <h4>Distribución (pie)</h4>
+                <h4 className="card-title">Distribución (pie)</h4>
                 <Pie data={(data.byEstado||[]).map((x:any)=>({ label:x.estado, value:x.total }))} />
               </div>
             </div>

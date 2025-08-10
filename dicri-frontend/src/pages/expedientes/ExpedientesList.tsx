@@ -37,19 +37,31 @@ export function ExpedientesListPage() {
   return (
     <div className="card" style={{ padding:16 }}>
       <div className="hstack" style={{ justifyContent:'space-between' }}>
-        <h2 style={{ margin:0 }}>Expedientes</h2>
+  <h2 className="card-title" style={{ margin:0 }}>Expedientes</h2>
         {hasPerm('expediente.create') && <Link className="btn primary" to="/expedientes/create">Nuevo</Link>}
       </div>
-      <div className="hstack" style={{ margin:'12px 0' }}>
-        <input className="input" placeholder="Folio" defaultValue={folio} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('folio', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input className="input" placeholder="Sede" defaultValue={sede} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('sede_codigo', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input className="input" placeholder="Desde (YYYY-MM-DD)" defaultValue={desde} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('desde', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input className="input" placeholder="Hasta (YYYY-MM-DD)" defaultValue={hasta} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('hasta', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+      <div className="hstack" style={{ margin:'12px 0', alignItems:'end' }}>
+        <div className="field" style={{ minWidth:160 }}>
+          <span className="label">Folio</span>
+          <input className="input" defaultValue={folio} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('folio', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        </div>
+        <div className="field" style={{ minWidth:160 }}>
+          <span className="label">Sede</span>
+          <input className="input" defaultValue={sede} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('sede_codigo', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        </div>
+        <div className="field" style={{ minWidth:180 }}>
+          <span className="label">Desde</span>
+          <input className="input" type="date" defaultValue={desde} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('desde', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        </div>
+        <div className="field" style={{ minWidth:180 }}>
+          <span className="label">Hasta</span>
+          <input className="input" type="date" defaultValue={hasta} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('hasta', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        </div>
       </div>
 
       {loading ? <div>Cargando…</div> : error ? <div style={{ color:'crimson' }}>{error}</div> : (
         <table className="table">
-          <thead><tr><th>ID</th><th>Folio</th><th>Título</th><th>Estado</th><th>Acciones</th></tr></thead>
+          <thead><tr><th>ID</th><th>Folio</th><th>Título</th><th>Estado</th></tr></thead>
           <tbody>
             {items.map(e => (
               <tr key={e.expediente_id || e.id}>
@@ -57,7 +69,6 @@ export function ExpedientesListPage() {
                 <td>{e.folio}</td>
                 <td><Link to={`/expedientes/${e.expediente_id || e.id}`}>{e.titulo}</Link></td>
                 <td>{e.estado}</td>
-                <td></td>
               </tr>
             ))}
           </tbody>
