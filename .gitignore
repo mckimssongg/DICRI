@@ -30,3 +30,9 @@ dicri-backend/coverage/lcov-report/src/services/index.html
 dicri-backend/coverage/lcov-report/src/utils/index.html
 dicri-backend/coverage/lcov-report/src/utils/jwt.ts.html
 dicri-backend/.env
+
+dicri-infra/
+dicri-frontend/
+
+mi_proyecto_completo.txt
+dicri-backend/.env

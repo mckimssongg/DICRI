@@ -183,6 +183,36 @@ export const openApiSpec: OpenAPIV3.Document = {
           total: { type: "integer" },
         },
       },
+      AdjuntoItem: {
+        type: "object",
+        properties: {
+          adjunto_id: { type: "integer" },
+          archivo_nombre: { type: "string" },
+          mime: { type: "string" },
+          tamano_bytes: { type: "integer" },
+          sha256: { type: "string" },
+          storage_key: { type: "string" },
+          creado_por: { type: "integer" },
+          creado_at: { type: "string" },
+          scan_status: {
+            type: "string",
+            enum: ["PENDING", "CLEAN", "INFECTED", "ERROR"],
+          },
+          scan_details: { type: "string", nullable: true },
+        },
+      },
+      AdjuntoUploadResponse: {
+        type: "object",
+        properties: { adjunto_id: { type: "integer" } },
+      },
+      AdjuntoDownloadLink: {
+        type: "object",
+        properties: {
+          url: { type: "string" },
+          filename: { type: "string" },
+          mime: { type: "string" },
+        },
+      },
     },
   },
   security: [],
@@ -656,6 +686,117 @@ export const openApiSpec: OpenAPIV3.Document = {
         parameters: [
           {
             name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "204": { description: "No Content" },
+          "404": { description: "No encontrado" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}/adjuntos": {
+      post: {
+        tags: ["Adjuntos"],
+        summary: "Sube un adjunto al expediente (AV + hash + S3)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "multipart/form-data": {
+              schema: {
+                type: "object",
+                properties: { file: { type: "string", format: "binary" } },
+              },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Creado",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AdjuntoUploadResponse" },
+              },
+            },
+          },
+          "415": { description: "Tipo no permitido" },
+          "422": { description: "Archivo infectado" },
+        },
+      },
+      get: {
+        tags: ["Adjuntos"],
+        summary: "Lista adjuntos del expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/AdjuntoItem" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/adjuntos/{adjuntoId}/download": {
+      get: {
+        tags: ["Adjuntos"],
+        summary: "Obtiene URL firmada de descarga (60s)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "adjuntoId",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/AdjuntoDownloadLink" },
+              },
+            },
+          },
+          "409": { description: "Escaneo pendiente" },
+          "423": { description: "Archivo infectado" },
+          "404": { description: "No encontrado" },
+        },
+      },
+    },
+    "/api/v1/adjuntos/{adjuntoId}": {
+      delete: {
+        tags: ["Adjuntos"],
+        summary: "Elimina (soft) el adjunto y elimina el objeto del storage",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "adjuntoId",
             in: "path",
             required: true,
             schema: { type: "integer" },
