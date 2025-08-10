@@ -4,7 +4,7 @@ Infra local para demo con Docker Compose.
 - SQL Server 2022
 - API (dicri-backend)
 - Web (dicri-frontend)
-- Redis, MinIO, MailHog
+- MinIO
 
 ## Uso
 1. Copiar `env.backend.example` a `../dicri-backend/.env`

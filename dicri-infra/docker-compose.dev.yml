@@ -1,3 +1,5 @@
+version: "3.9"
+
 services:
   sqlserver:
     image: mcr.microsoft.com/mssql/server:2022-latest
@@ -24,6 +26,8 @@ services:
       - ../dicri-backend:/app
     depends_on:
       - sqlserver
+      - minio
+      - clamav
     ports:
       - "3000:3000"
 
@@ -38,23 +42,46 @@ services:
     ports:
       - "5173:5173"
 
-  redis:
-    image: redis:7-alpine
-    ports: ["6379:6379"]
-
   minio:
     image: quay.io/minio/minio
     command: server /data --console-address ":9001"
     environment:
-      - MINIO_ROOT_USER=admin
-      - MINIO_ROOT_PASSWORD=adminadmin
-    ports: ["9000:9000", "9001:9001"]
+      - MINIO_ROOT_USER=dicri
+      - MINIO_ROOT_PASSWORD=dicri_secret
+    ports:
+      - "9000:9000"
+      - "9001:9001"
     volumes:
       - minio_data:/data
 
+  clamav:
+    image: clamav/clamav:latest
+    restart: unless-stopped
+    ports:
+      - "3310:3310"
+    healthcheck:
+      test: ["CMD", "clamdscan", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
+  minio-init:
+    image: minio/mc
+    depends_on:
+      - minio
+    entrypoint: /bin/sh
+    command: -c "/init-minio.sh"
+    volumes:
+      - ./init-minio.sh:/init-minio.sh:ro
+    environment:
+      MINIO_ACCESS_KEY: dicri
+      MINIO_SECRET_KEY: dicri_secret
+      MINIO_BUCKET: dicri-attachments
+
   mailhog:
     image: mailhog/mailhog
-    ports: ["8025:8025"]
+    ports:
+      - "8025:8025"
 
 volumes:
   sql_data:
