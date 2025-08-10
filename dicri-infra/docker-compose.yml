@@ -51,6 +51,17 @@ services:
     image: mailhog/mailhog
     ports: ["8025:8025"]
 
+  clamav:
+    image: clamav/clamav:stable
+    restart: unless-stopped
+    ports:
+      - "3310:3310"
+    healthcheck:
+      test: ["CMD", "clamdscan", "--version"]
+      interval: 30s
+      timeout: 10s
+      retries: 5
+
 volumes:
   sql_data:
   minio_data:

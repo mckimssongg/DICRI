@@ -213,6 +213,78 @@ export const openApiSpec: OpenAPIV3.Document = {
           mime: { type: "string" },
         },
       },
+      IndicioItem: {
+        type: "object",
+        properties: {
+          indicio_id: { type: "integer" },
+          expediente_id: { type: "integer" },
+          tipo_code: { type: "string" },
+          descripcion: { type: "string", nullable: true },
+          color_code: { type: "string", nullable: true },
+          tamano: { type: "string", nullable: true },
+          peso: { type: "string", nullable: true },
+          ubicacion_code: { type: "string", nullable: true },
+          tecnico_id: { type: "integer" },
+          created_at: { type: "string" },
+          updated_at: { type: "string" },
+        },
+      },
+      IndicioCreateRequest: {
+        type: "object",
+        required: ["tipo_code"],
+        properties: {
+          tipo_code: { type: "string", example: "ARMA" },
+          descripcion: { type: "string" },
+          color_code: { type: "string", example: "NEGRO" },
+          tamano: { type: "string", example: "15 CM" },
+          peso: { type: "string", example: "1.2 KG" },
+          ubicacion_code: { type: "string", example: "LAB" },
+        },
+      },
+      RejectRequest: {
+        type: "object",
+        required: ["motivo"],
+        properties: {
+          motivo: { type: "string", example: "Información incompleta" },
+        },
+      },
+      ReporteExpedientesResponse: {
+        type: "object",
+        properties: {
+          byEstado: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                estado: { type: "string" },
+                total: { type: "integer" },
+              },
+            },
+          },
+          aprobRechPorFecha: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                estado: { type: "string" },
+                fecha: { type: "string" },
+                total: { type: "integer" },
+              },
+            },
+          },
+          porSede: {
+            type: "array",
+            items: {
+              type: "object",
+              properties: {
+                sede_codigo: { type: "string" },
+                estado: { type: "string" },
+                total: { type: "integer" },
+              },
+            },
+          },
+        },
+      },
     },
   },
   security: [],
@@ -805,6 +877,215 @@ export const openApiSpec: OpenAPIV3.Document = {
         responses: {
           "204": { description: "No Content" },
           "404": { description: "No encontrado" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}/indicios": {
+      post: {
+        tags: ["Indicios"],
+        summary: "Crea indicio en expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/IndicioCreateRequest" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Creado",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "object",
+                  properties: { indicio_id: { type: "integer" } },
+                },
+              },
+            },
+          },
+        },
+      },
+      get: {
+        tags: ["Indicios"],
+        summary: "Lista indicios del expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  type: "array",
+                  items: { $ref: "#/components/schemas/IndicioItem" },
+                },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/indicios/{id}": {
+      put: {
+        tags: ["Indicios"],
+        summary: "Actualiza indicio",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/IndicioCreateRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "OK" },
+          "404": { description: "No encontrado" },
+        },
+      },
+      delete: {
+        tags: ["Indicios"],
+        summary: "Elimina (soft) indicio",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "204": { description: "No Content" },
+          "404": { description: "No encontrado" },
+        },
+      },
+    },
+
+    /* Revisión */
+    "/api/v1/expedientes/{id}/submit": {
+      post: {
+        tags: ["Expedientes"],
+        summary: "Enviar a revisión",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": { description: "OK" },
+          "409": { description: "Estado inválido" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}/approve": {
+      post: {
+        tags: ["Expedientes"],
+        summary: "Aprobar expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": { description: "OK" },
+          "409": { description: "Estado inválido" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}/reject": {
+      post: {
+        tags: ["Expedientes"],
+        summary: "Rechazar expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/RejectRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "OK" },
+          "400": { description: "Motivo requerido" },
+          "409": { description: "Estado inválido" },
+        },
+      },
+    },
+
+    /* Reportes */
+    "/api/v1/reportes/expedientes": {
+      get: {
+        tags: ["Reportes"],
+        summary: "Conteos por estado/fecha/sede",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "desde",
+            in: "query",
+            schema: { type: "string" },
+            description: "YYYY-MM-DD",
+          },
+          {
+            name: "hasta",
+            in: "query",
+            schema: { type: "string" },
+            description: "YYYY-MM-DD",
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ReporteExpedientesResponse",
+                },
+              },
+            },
+          },
         },
       },
     },

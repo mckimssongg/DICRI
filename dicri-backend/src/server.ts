@@ -16,6 +16,9 @@ import catalogsRouter from './routes/catalogs';
 import usersRouter from './routes/users';
 import expedientesRouter from './routes/expedientes';
 import attachmentsRouter from './routes/attachments';
+import indiciosRouter from './routes/indicios';
+import reportesRouter from './routes/reportes';
+import setupRouter from './routes/setup';
 
 const app = express();
 
@@ -41,6 +44,11 @@ app.use('/api/v1/catalogs', catalogsRouter);
 app.use('/api/v1/users', usersRouter);
 app.use('/api/v1/expedientes', expedientesRouter);
 app.use('/api/v1/attachments', attachmentsRouter);
+app.use('/api/v1/indicios', indiciosRouter);
+app.use('/api/v1/reportes', reportesRouter);
+if (process.env.NODE_ENV !== 'production') {
+  app.use('/api/v1/setup', setupRouter);
+}
 
 app.get('/api-docs.json', (_req, res) => res.json(openApiSpec));
 app.use('/docs',

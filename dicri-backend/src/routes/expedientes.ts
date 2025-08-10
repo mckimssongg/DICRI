@@ -3,6 +3,7 @@ import { z } from 'zod';
 import { authGuard } from '../middlewares/authGuard';
 import { rbacGuard } from '../middlewares/rbacGuard';
 import { expedienteCreate, expedienteDelete, expedienteGetById, expedienteList } from '../services/expedientes';
+import { expedienteApprove, expedienteReject, expedienteSubmit } from '../services/revision';
 
 const router = Router();
 
@@ -60,6 +61,38 @@ router.delete('/:id',
   async (req, res) => {
     const ok = await expedienteDelete(Number(req.params.id), req.auth!.username);
     return res.status(ok ? 204 : 404).send();
+  }
+);
+
+/* POST /expedientes/:id/submit */
+router.post('/:id/submit',
+  authGuard(),
+  rbacGuard(['expediente.update','expediente.create']), // quien crea puede enviar a revisión
+  async (req, res) => {
+    await expedienteSubmit(Number(req.params.id), req.auth!.sub);
+    res.status(200).json({ status: 'ok' });
+  }
+);
+
+/* POST /expedientes/:id/approve */
+router.post('/:id/approve',
+  authGuard(),
+  rbacGuard(['expediente.review']), // coordinador
+  async (req, res) => {
+    await expedienteApprove(Number(req.params.id), req.auth!.sub);
+    res.status(200).json({ status: 'ok' });
+  }
+);
+
+/* POST /expedientes/:id/reject */
+const RejectSchema = z.object({ motivo: z.string().min(5).max(1000) });
+router.post('/:id/reject',
+  authGuard(),
+  rbacGuard(['expediente.review']), // coordinador
+  async (req, res) => {
+    const { motivo } = RejectSchema.parse(req.body);
+    await expedienteReject(Number(req.params.id), req.auth!.sub, motivo);
+    res.status(200).json({ status: 'ok' });
   }
 );
 
