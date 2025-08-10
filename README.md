@@ -7,6 +7,7 @@ Este repositorio contiene:
 - Infraestructura (Docker, docker-compose y opcionalmente IaC)
 
 Índice
+
 - Frontend
 - Backend
 - Infraestructura
@@ -16,6 +17,9 @@ Este repositorio contiene:
 - Pruebas y Calidad
 - Observabilidad
 - Seguridad
+
+2) Instalar dependencias
+3) Levantar con Docker (recomendado)
 
 ## Frontend
 
@@ -65,12 +69,14 @@ Red y puertos (ejemplo)
 
 3) Levantar con Docker (recomendado)
 
-- docker compose -f infra/docker-compose.yml up --build
+- docker compose -f dicri-infra/docker-compose.dev.yml up --build
 
 4) Levantar sin Docker (alternativa)
+5) Levantar sin Docker (alternativa)
 
-- Backend: (cd backend && npm run dev)
-- Frontend: (cd frontend && npm run dev)
+- Backend: (cd dicri-backend && npm run dev)
+- Frontend: (cd dicri-frontend && npm run dev)
+  - cp dicri-infra/.env.example dicri-infra/.env
 - Base de datos local o contenedor solo para DB.
 
 ## Variables de entorno
@@ -113,7 +119,7 @@ Red y puertos (ejemplo)
 - Frontend
   - npm run dev / build / preview / test / lint
 - Backend
-  - npm run dev / build / start / test / lint / migrate / seed
+  - npm run dev / build / start / test / lint
 - Iniciar el proyecto:
   - docker compose -f docker-compose.dev.yml up
 - Restar Api:
@@ -121,10 +127,21 @@ Red y puertos (ejemplo)
 - Correr migraciones y seeds:
   - docker compose -f docker-compose.dev.yml exec api npm run db:migrate
 
+## Ejecutar tests
+
+- Backend (desde la carpeta dicri-backend):
+
+```powershell
+cd dicri-backend
+npx jest -i --json --outputFile=jest-report.json
+```
+
+![](assets/20250810_125941_image.png)
+
 ## Pruebas y Calidad
 
-- Unitarias backend: `tests/`.
-- Lint/Format: ESLint + Prettier
+- Unitarias backend: `test/` (Jest + ts-jest)
+- Lint/Format: ESLint
 
 ## Observabilidad
 
@@ -136,4 +153,3 @@ Red y puertos (ejemplo)
 - Rate limiting y helmet en API.
 - JWT/OAuth2 para autenticación.
 - Sanitización y validación de inputs.
-
