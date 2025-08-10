@@ -4,7 +4,7 @@ Este repositorio contiene:
 
 - Frontend (React + TypeScript)
 - Backend (Node.js + TypeScript)
-- Infraestructura (Docker, docker-compose y opcionalmente IaC)
+- Infraestructura (Docker, docker-compose)
 
 Índice
 
