@@ -9,7 +9,7 @@ import { adjuntoCreate, adjuntoDelete, adjuntoGetById, adjuntoUpdateScan, adjunt
 import { buildObjectKey, ensureBucket, getPresignedGetUrl, putObject, removeObject } from '../services/storage';
 
 const router = Router();
-const upload = multer({ limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB
+const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB en memoria
 
 const ALLOWED = new Set([
   'application/pdf',
@@ -25,11 +25,14 @@ router.post('/expedientes/:id/adjuntos',
   upload.single('file'),
   async (req, res) => {
     const expedienteId = Number(req.params.id);
-    if (!req.file) return res.status(400).json({ error: 'Archivo requerido (campo "file")' });
+  if (!req.file) return res.status(400).json({ error: 'Archivo requerido (campo "file")' });
 
     const file = req.file;
     if (!ALLOWED.has(file.mimetype)) {
       return res.status(415).json({ error: 'Tipo de archivo no permitido' });
+    }
+    if (!file.buffer) {
+      return res.status(400).json({ error: 'Carga inválida: no se recibió contenido' });
     }
 
     await ensureBucket();

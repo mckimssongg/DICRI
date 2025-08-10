@@ -26,7 +26,20 @@ export async function putObject(objectKey: string, data: Buffer, mime: string) {
 }
 
 export async function getPresignedGetUrl(objectKey: string, expirySec = 60) {
-  return minio.presignedGetObject(bucket, objectKey, expirySec);
+  const url = await minio.presignedGetObject(bucket, objectKey, expirySec);
+  const pub = process.env.MINIO_PUBLIC_URL;
+  if (pub) {
+    try {
+      const u = new URL(url);
+      const b = new URL(pub);
+      u.protocol = b.protocol;
+      u.host = b.host; // incluye hostname:puerto
+      return u.toString();
+    } catch {
+      // si falla, devolvemos el original
+    }
+  }
+  return url;
 }
 
 export async function removeObject(objectKey: string) {

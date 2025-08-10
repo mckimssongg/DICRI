@@ -18,7 +18,11 @@ router.post('/',
   authGuard(),
   rbacGuard(['expediente.create']),
   async (req, res) => {
-    const p = CreateSchema.parse(req.body);
+    const parsed = CreateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Parámetros inválidos', details: parsed.error.issues });
+    }
+    const p = parsed.data;
     const tecnicoId = req.auth!.sub;
     const out = await expedienteCreate({ ...p, tecnico_id: tecnicoId });
     res.status(201).json(out);
@@ -103,7 +107,11 @@ router.put('/:id',
   rbacGuard(['expediente.update']),
   async (req,res) => {
     const id = Number(req.params.id);
-    const p = UpdateSchema.parse(req.body);
+    const parsed = UpdateSchema.safeParse(req.body);
+    if (!parsed.success) {
+      return res.status(400).json({ error: 'Parámetros inválidos', details: parsed.error.issues });
+    }
+    const p = parsed.data;
     const ok = await expedienteUpdate(id, p);
     return res.status(ok ? 200 : 409).json(ok ? { ok:true } : { error: 'Sólo BORRADOR' });
   }

@@ -16,7 +16,8 @@ const schema = z.object({
 type Form = z.infer<typeof schema>;
 
 export function ExpedienteCreatePage() {
-  const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema) });
+  const today = new Date().toISOString().slice(0,10);
+  const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { fecha_registro: today } });
   const navigate = useNavigate();
   const toast = useToast();
 

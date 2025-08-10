@@ -1,4 +1,8 @@
 import NodeClam from 'clamscan';
+import { promises as fs } from 'fs';
+import { tmpdir } from 'os';
+import { join } from 'path';
+import { randomUUID } from 'crypto';
 
 let scanner: any | null = null;
 
@@ -29,8 +33,30 @@ export async function scanBuffer(buf: Buffer): Promise<{ status: 'CLEAN'|'INFECT
   try {
     const s = await getScanner();
     if (!s) return { status: 'CLEAN', details: 'scanner disabled' };
-    const { isInfected, viruses } = await s.scanBuffer(buf);
-    return isInfected ? { status: 'INFECTED', details: (viruses||[]).join(',') } : { status: 'CLEAN' };
+    // Algunas versiones exponen scanBuffer en s o en s.clamdscan
+    const scanBuf = typeof s.scanBuffer === 'function' ? s.scanBuffer.bind(s)
+      : (s.clamdscan && typeof s.clamdscan.scanBuffer === 'function' ? s.clamdscan.scanBuffer.bind(s.clamdscan) : null);
+    if (scanBuf) {
+      const res: any = await scanBuf(buf);
+      const infected = !!(res?.isInfected || res?.is_infected);
+      const viruses = res?.viruses || res?.virus || [];
+      return infected ? { status: 'INFECTED', details: (Array.isArray(viruses)?viruses:[viruses]).join(',') } : { status: 'CLEAN' };
+    }
+
+    // Fallback: escribir a archivo temporal y usar scanFile
+    const tmpPath = join(tmpdir(), `dicri-av-${randomUUID()}`);
+    await fs.writeFile(tmpPath, buf);
+    try {
+      const scanFile = typeof s.scanFile === 'function' ? s.scanFile.bind(s)
+        : (s.clamdscan && typeof s.clamdscan.scanFile === 'function' ? s.clamdscan.scanFile.bind(s.clamdscan) : null);
+      if (!scanFile) throw new Error('scanBuffer/scanFile not available');
+      const res: any = await scanFile(tmpPath);
+      const infected = !!(res?.isInfected || res?.is_infected || res === true);
+      const viruses = res?.viruses || res?.virus || [];
+      return infected ? { status: 'INFECTED', details: (Array.isArray(viruses)?viruses:[viruses]).join(',') } : { status: 'CLEAN' };
+    } finally {
+      try { await fs.unlink(tmpPath); } catch { /* noop */ }
+    }
   } catch (e) {
     return { status: 'ERROR', details: (e as Error).message };
   }

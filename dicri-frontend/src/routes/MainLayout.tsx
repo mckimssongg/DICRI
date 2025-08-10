@@ -5,7 +5,10 @@ import React, { createContext, useContext, useMemo, useState } from 'react';
 
 type Toast = { id:number; kind:'success'|'error'|'info'; msg:string };
 const ToastCtx = createContext<{ push:(t:Omit<Toast,'id'>)=>void } | null>(null);
-export function useToast(){ const ctx = useContext(ToastCtx); if(!ctx) throw new Error('ToastCtx'); return ctx; }
+export function useToast(){
+  const ctx = useContext(ToastCtx);
+  return ctx ?? { push: () => {} };
+}
 
 export function MainLayout() {
   const user = useAuth(s=>s.user);
