@@ -8,6 +8,7 @@ Este repositorio contiene:
 
 Índice
 
+- Arquitectura
 - Frontend
 - Backend
 - Infraestructura
@@ -18,8 +19,24 @@ Este repositorio contiene:
 - Observabilidad
 - Seguridad
 
-2) Instalar dependencias
-3) Levantar con Docker (recomendado)
+## Arquitectura
+
+
+![](assets/20250810_131904_image.png)
+
+### Explicación de la Arquitectura
+
+El diagrama presenta una arquitectura de **tres capas** para una aplicación web moderna, utilizando **Docker** para la contenerización de los servicios.
+
+1. **Capa Cliente:** 
+   * **Función:** La interfaz de usuario con la que el usuario interactúa.
+   * **Tecnología:** Una aplicación web (Frontend) desarrollada con **ReactJS** que se ejecuta en el navegador del usuario.
+2. **Capa Aplicación:**
+   * **Función:** El "cerebro" de la aplicación, donde reside la lógica de negocio.
+   * **Tecnología:** Contiene dos servicios, el **Frontend** y la **API Backend** , ambos empaquetados en **Docker** . El cliente se comunica con la API Backend a través de llamadas **API REST** , con autenticación mediante **JWT** .
+3. **Capa Datos/Infraestructura:**
+   * **Función:** Almacena y gestiona los datos de la aplicación.
+   * **Tecnología:** Una base de datos **SQL Server 2022** , también ejecutándose en un contenedor **Docker** . La API Backend se conecta a esta base de datos para interactuar con las tablas, procedimientos almacenados (`SP`) y triggers.
 
 ## Frontend
 
