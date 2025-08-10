@@ -18,6 +18,7 @@ import { ExpedienteDetailPage } from './pages/expedientes/ExpedienteDetail'
 import { ReportesPage } from './pages/Reportes'
 import { Protected } from './routes/Protected'
 import { MainLayout } from './routes/MainLayout'
+import './styles.css'
 
 const router = createBrowserRouter([
   { path: '/login', element: <LoginPage /> },

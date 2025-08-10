@@ -1,6 +1,8 @@
 import { useEffect, useState } from 'react';
 import { useParams } from 'react-router-dom';
 import { api } from '../../utils/http';
+import { useToast } from '../../routes/MainLayout';
+import { mapError } from '../../utils/errors';
 import { useAuth } from '../../store/auth';
 
 export function ExpedienteDetailPage() {
@@ -8,12 +10,13 @@ export function ExpedienteDetailPage() {
   const hasPerm = useAuth(s=>s.hasPerm);
   const [exp, setExp] = useState<any>(null);
   const [err, setErr] = useState<string|null>(null);
+  const toast = useToast();
 
   async function load() {
     try {
       const r = await api.get(`/expedientes/${id}`);
       setExp(r.data);
-    } catch (e:any) { setErr(e?.response?.data?.error || 'Error'); }
+  } catch (e:any) { setErr(mapError(e)); }
   }
 
   useEffect(() => { load(); }, [id]);
@@ -22,13 +25,15 @@ export function ExpedienteDetailPage() {
     try {
       await api.post(`/expedientes/${id}/${path}`, body);
       await load();
-    } catch (e:any) { alert(e?.response?.data?.error || 'Error'); }
+      const msg = path==='submit' ? 'Enviado a revisión' : path==='approve' ? 'Aprobado' : path==='reject' ? 'Rechazado' : 'Reenviado a revisión';
+      toast.push({ kind:'success', msg });
+  } catch (e:any) { toast.push({ kind:'error', msg: mapError(e) }); }
   }
 
   async function doDelete() {
     if (!confirm('¿Eliminar?')) return;
-    try { await api.delete(`/expedientes/${id}`); history.back(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+    try { await api.delete(`/expedientes/${id}`); toast.push({ kind:'success', msg:'Expediente eliminado' }); history.back(); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   }
 
   if (err) return <div style={{ color:'crimson' }}>{err}</div>;
@@ -45,7 +50,9 @@ export function ExpedienteDetailPage() {
       <div><b>Estado:</b> {estado}</div>
   <Editable exp={exp} enabled={puedeEditar} onSaved={load} />
       <div style={{ display:'flex', gap:8, flexWrap:'wrap' }}>
-        {puedeEditar && <button onClick={() => doAction('resubmit')}>Re-enviar revisión</button>}
+        {puedeSubmit && estado==='RECHAZADO' && (
+          <button onClick={() => doAction('resubmit')}>Re-enviar revisión</button>
+        )}
         {puedeSubmit && estado==='BORRADOR' && <button onClick={() => doAction('submit')}>Enviar a revisión</button>}
         {puedeRevisar && estado==='EN_REVISION' && <>
           <button onClick={() => doAction('approve')}>Aprobar</button>
@@ -76,8 +83,8 @@ function Editable({ exp, enabled, onSaved }:{ exp:any; enabled:boolean; onSaved:
   useEffect(()=>{ setEdit(enabled); }, [enabled]);
 
   async function save(){
-    try{ await api.put(`/expedientes/${id}`, { sede_codigo: sede, fecha_registro: fecha, titulo, descripcion: desc || undefined }); setEdit(false); onSaved(); }
-    catch(e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try{ await api.put(`/expedientes/${id}`, { sede_codigo: sede, fecha_registro: fecha, titulo, descripcion: desc || undefined }); setEdit(false); onSaved(); }
+  catch(e:any){ /* toast en nivel superior */ }
   }
 
   if(!edit){
@@ -107,29 +114,30 @@ function ExpIndicios({ expedienteId }:{ expedienteId:number }) {
   const hasPerm = useAuth(s=>s.hasPerm);
   const [items, setItems] = useState<any[]>([]);
   const [err, setErr] = useState<string|null>(null);
+  const toast = useToast();
 
   async function load() {
-    try { const r = await api.get(`/expedientes/${expedienteId}/indicios`); setItems(r.data); }
-    catch (e:any){ setErr(e?.response?.data?.error || 'Error'); }
+  try { const r = await api.get(`/expedientes/${expedienteId}/indicios`); setItems(r.data); }
+  catch (e:any){ setErr(mapError(e)); }
   }
   useEffect(() => { load(); }, [expedienteId]);
 
   async function crear() {
     const tipo_code = prompt('Tipo (code):');
     if (!tipo_code) return;
-    try { await api.post(`/expedientes/${expedienteId}/indicios`, { tipo_code }); await load(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.post(`/expedientes/${expedienteId}/indicios`, { tipo_code }); await load(); toast.push({ kind:'success', msg:'Indicio creado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   }
   async function editar(id:number) {
     const tipo_code = prompt('Nuevo tipo (code):');
     if (!tipo_code) return;
-    try { await api.put(`/indicios/${id}`, { tipo_code }); await load(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.put(`/indicios/${id}`, { tipo_code }); await load(); toast.push({ kind:'success', msg:'Indicio actualizado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   }
   async function eliminar(id:number) {
     if (!confirm('¿Eliminar indicio?')) return;
-    try { await api.delete(`/indicios/${id}`); await load(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.delete(`/indicios/${id}`); await load(); toast.push({ kind:'success', msg:'Indicio eliminado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   }
 
   return (
@@ -155,18 +163,19 @@ function ExpAdjuntos({ expedienteId }:{ expedienteId:number }) {
   const hasPerm = useAuth(s=>s.hasPerm);
   const [items, setItems] = useState<any[]>([]);
   const [err, setErr] = useState<string|null>(null);
+  const toast = useToast();
 
   async function load() {
-    try { const r = await api.get(`/expedientes/${expedienteId}/adjuntos`); setItems(r.data); }
-    catch (e:any){ setErr(e?.response?.data?.error || 'Error'); }
+  try { const r = await api.get(`/expedientes/${expedienteId}/adjuntos`); setItems(r.data); }
+  catch (e:any){ setErr(mapError(e)); }
   }
   useEffect(() => { load(); }, [expedienteId]);
 
   async function subir(e:React.ChangeEvent<HTMLInputElement>) {
     const f = e.target.files?.[0]; if (!f) return;
     const fd = new FormData(); fd.append('file', f);
-    try { await api.post(`/expedientes/${expedienteId}/adjuntos`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }); await load(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.post(`/expedientes/${expedienteId}/adjuntos`, fd, { headers: { 'Content-Type': 'multipart/form-data' } }); await load(); toast.push({ kind:'success', msg:'Adjunto subido' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
     finally { e.currentTarget.value = ''; }
   }
 
@@ -177,13 +186,13 @@ function ExpAdjuntos({ expedienteId }:{ expedienteId:number }) {
       const a = document.createElement('a'); a.href = url; a.download = filename || '';
       document.body.appendChild(a); a.click(); a.remove();
     } catch (e:any) {
-      alert(e?.response?.data?.error || 'Error');
+      toast.push({ kind:'error', msg: mapError(e) });
     }
   }
   async function eliminar(id:number) {
     if (!confirm('¿Eliminar adjunto?')) return;
-    try { await api.delete(`/adjuntos/${id}`); await load(); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+    try { await api.delete(`/adjuntos/${id}`); await load(); toast.push({ kind:'success', msg:'Adjunto eliminado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   }
 
   return (

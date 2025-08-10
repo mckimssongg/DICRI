@@ -3,6 +3,8 @@ import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { api } from '../utils/http';
 import { useSearchParams } from 'react-router-dom';
+import { useToast } from '../routes/MainLayout';
+import { mapError } from '../utils/errors';
 
 const schema = z.object({
   token: z.string().min(10),
@@ -15,9 +17,10 @@ export function ResetPasswordPage() {
   const [sp] = useSearchParams();
   const token = sp.get('token') || '';
   const { register, handleSubmit, formState: { errors } } = useForm<Form>({ resolver: zodResolver(schema), defaultValues: { token } });
+  const toast = useToast();
   const onSubmit = async (v: Form) => {
-    try { await api.post('/auth/reset/confirm', v); alert('Contraseña actualizada.'); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+    try { await api.post('/auth/reset/confirm', v); toast.push({ kind:'success', msg:'Contraseña actualizada' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: mapError(e) }); }
   };
   return (
     <form onSubmit={handleSubmit(onSubmit)} style={{ display:'grid', gap:8, maxWidth:400 }}>

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../utils/http';
 import { Pagination } from '../../routes/Pagination';
 import { useAuth } from '../../store/auth';
+import { mapError } from '../../utils/errors';
 
 export function ExpedientesListPage() {
   const hasPerm = useAuth(s=>s.hasPerm);
@@ -25,7 +26,7 @@ export function ExpedientesListPage() {
         const r = await api.get('/expedientes', { params: { folio: folio || undefined, sede_codigo: sede || undefined, desde: desde || undefined, hasta: hasta || undefined, page, pageSize } });
         setItems(r.data.items || []);
         setTotal(r.data.total || 0);
-      } catch (e:any) { setError(e?.response?.data?.error || 'Error'); }
+  } catch (e:any) { setError(mapError(e)); }
       finally { setLoading(false); }
     }
     load();
@@ -34,18 +35,20 @@ export function ExpedientesListPage() {
   function onPage(p:number) { sp.set('page', String(p)); setSp(sp); }
 
   return (
-    <div>
-      <h2>Expedientes</h2>
-      <div style={{ display:'flex', gap:8, marginBottom:12, flexWrap:'wrap' }}>
-        <input placeholder="Folio" defaultValue={folio} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('folio', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input placeholder="Sede" defaultValue={sede} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('sede_codigo', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input placeholder="Desde (YYYY-MM-DD)" defaultValue={desde} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('desde', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        <input placeholder="Hasta (YYYY-MM-DD)" defaultValue={hasta} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('hasta', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        {hasPerm('expediente.create') && <Link to="/expedientes/create">Nuevo</Link>}
+    <div className="card" style={{ padding:16 }}>
+      <div className="hstack" style={{ justifyContent:'space-between' }}>
+        <h2 style={{ margin:0 }}>Expedientes</h2>
+        {hasPerm('expediente.create') && <Link className="btn primary" to="/expedientes/create">Nuevo</Link>}
+      </div>
+      <div className="hstack" style={{ margin:'12px 0' }}>
+        <input className="input" placeholder="Folio" defaultValue={folio} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('folio', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        <input className="input" placeholder="Sede" defaultValue={sede} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('sede_codigo', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        <input className="input" placeholder="Desde (YYYY-MM-DD)" defaultValue={desde} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('desde', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
+        <input className="input" placeholder="Hasta (YYYY-MM-DD)" defaultValue={hasta} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('hasta', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
       </div>
 
       {loading ? <div>Cargando…</div> : error ? <div style={{ color:'crimson' }}>{error}</div> : (
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <table className="table">
           <thead><tr><th>ID</th><th>Folio</th><th>Título</th><th>Estado</th><th>Acciones</th></tr></thead>
           <tbody>
             {items.map(e => (
@@ -61,7 +64,7 @@ export function ExpedientesListPage() {
         </table>
       )}
 
-      <div style={{ marginTop:12 }}>
+  <div style={{ marginTop:12 }}>
         <Pagination page={page} pageSize={pageSize} total={total} onPage={onPage} />
       </div>
     </div>

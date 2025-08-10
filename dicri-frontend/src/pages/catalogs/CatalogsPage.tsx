@@ -1,6 +1,7 @@
 import { useEffect, useState } from 'react';
 import { api } from '../../utils/http';
 import { useAuth } from '../../store/auth';
+import { useToast } from '../../routes/MainLayout';
 
 const catalogs = [
   { key:'colores', label:'Colores' },
@@ -14,6 +15,7 @@ export function CatalogsPage() {
   const [data, setData] = useState<Record<string, any[]>>({});
   const [errors, setErrors] = useState<Record<string,string>>({});
   const [creating, setCreating] = useState<Record<string,{ code:string; label:string; sort_order:number }>>({});
+  const toast = useToast();
 
   useEffect(() => {
     catalogs.forEach(async c => {
@@ -33,19 +35,19 @@ export function CatalogsPage() {
 
   async function createItem(key:string){
     const v = creating[key]; if (!v?.code || !v?.label) return;
-    try { await api.post(`/catalogs/${key}/items`, { code: v.code, label: v.label, sort_order: v.sort_order ?? 0 }); setCreating(c=>({ ...c, [key]: { code:'', label:'', sort_order:0 } })); await reload(key); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.post(`/catalogs/${key}/items`, { code: v.code, label: v.label, sort_order: v.sort_order ?? 0 }); setCreating(c=>({ ...c, [key]: { code:'', label:'', sort_order:0 } })); await reload(key); toast.push({ kind:'success', msg:'Ítem agregado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: e?.response?.data?.error || 'Error al agregar' }); }
   }
 
   async function updateItem(item:any){
-    try { await api.put(`/catalogs/items/${item.item_id}`, { label: item.label, is_active: !!item.is_active, sort_order: Number(item.sort_order||0) }); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+    try { await api.put(`/catalogs/items/${item.item_id}`, { label: item.label, is_active: !!item.is_active, sort_order: Number(item.sort_order||0) }); toast.push({ kind:'success', msg:'Ítem actualizado' }); }
+    catch (e:any){ toast.push({ kind:'error', msg: e?.response?.data?.error || 'Error al actualizar' }); }
   }
 
   async function deleteItem(key:string, itemId:number){
     if (!confirm('¿Eliminar ítem?')) return;
-    try { await api.delete(`/catalogs/items/${itemId}`); await reload(key); }
-    catch (e:any){ alert(e?.response?.data?.error || 'Error'); }
+  try { await api.delete(`/catalogs/items/${itemId}`); await reload(key); toast.push({ kind:'success', msg:'Ítem eliminado' }); }
+  catch (e:any){ toast.push({ kind:'error', msg: e?.response?.data?.error || 'Error al eliminar' }); }
   }
 
   return (

@@ -2,12 +2,15 @@ import { useEffect, useState } from 'react';
 import { Link, useParams } from 'react-router-dom';
 import { api } from '../../utils/http';
 import { useAuth } from '../../store/auth';
+import { mapError } from '../../utils/errors';
+import { useToast } from '../../routes/MainLayout';
 
 export function UserDetailPage() {
   const { id } = useParams();
   const hasPerm = useAuth(s=>s.hasPerm);
   const [u, setU] = useState<any>(null);
   const [error, setError] = useState<string|null>(null);
+  const toast = useToast();
 
   useEffect(() => {
     async function load() {
@@ -35,7 +38,16 @@ export function UserDetailPage() {
         <div style={{ display:'flex', gap:8 }}>
           <Link to={`/users/${u.user_id || u.id}/edit`}>Editar</Link>
           <Link to={`/users/${u.user_id || u.id}/password`}>Cambiar contraseña</Link>
-          <button onClick={async ()=>{ if(!confirm('¿Deshabilitar usuario?')) return; try{ await api.delete(`/users/${u.user_id || u.id}`); alert('Usuario deshabilitado'); } catch(e:any){ alert(e?.response?.data?.error||'Error'); } }}>Deshabilitar</button>
+          <button onClick={async ()=>{
+            const ok = window.confirm('¿Deshabilitar usuario?');
+            if(!ok) return;
+            try{
+              await api.delete(`/users/${u.user_id || u.id}`);
+              toast.push({ kind:'success', msg:'Usuario deshabilitado' });
+            } catch(e:any){
+              toast.push({ kind:'error', msg: mapError(e) });
+            }
+          }}>Deshabilitar</button>
         </div>
       )}
     </div>

@@ -3,6 +3,7 @@ import { Link, useSearchParams } from 'react-router-dom';
 import { api } from '../../utils/http';
 import { useAuth } from '../../store/auth';
 import { Pagination } from '../../routes/Pagination';
+import { mapError } from '../../utils/errors';
 
 export function UsersListPage() {
   const hasPerm = useAuth(s=>s.hasPerm);
@@ -23,7 +24,7 @@ export function UsersListPage() {
         setItems(r.data.items || []);
         setTotal(r.data.total || 0);
       } catch (e:any) {
-        setError(e?.response?.data?.error || 'Error');
+        setError(mapError(e));
       } finally { setLoading(false); }
     }
     load();
@@ -35,15 +36,17 @@ export function UsersListPage() {
   }
 
   return (
-    <div>
-      <h2>Usuarios</h2>
-      <div style={{ display:'flex', gap:8, marginBottom:12 }}>
-        <input placeholder="Buscar" defaultValue={q} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('q', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
-        {hasPerm('users.write') && <Link to="/users/create">Nuevo</Link>}
+    <div className="card" style={{ padding:16 }}>
+      <div className="hstack" style={{ justifyContent:'space-between' }}>
+        <h2 style={{ margin:0 }}>Usuarios</h2>
+        {hasPerm('users.write') && <Link className="btn primary" to="/users/create">Nuevo</Link>}
+      </div>
+      <div className="hstack" style={{ margin:'12px 0' }}>
+        <input className="input" placeholder="Buscar" defaultValue={q} onKeyDown={e=>{ if(e.key==='Enter'){ sp.set('q', (e.target as HTMLInputElement).value); sp.set('page','1'); setSp(sp);} }} />
       </div>
 
       {loading ? <div>Cargando…</div> : error ? <div style={{ color:'crimson' }}>{error}</div> : (
-        <table style={{ width:'100%', borderCollapse:'collapse' }}>
+        <table className="table">
           <thead>
             <tr><th>ID</th><th>Usuario</th><th>Email</th><th>Activo</th><th>Acciones</th></tr>
           </thead>
