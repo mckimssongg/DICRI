@@ -2,6 +2,7 @@ import { Outlet, Link, useNavigate } from 'react-router-dom';
 import { useAuth } from '../store/auth';
 import { Can } from '../components/Can';
 import React, { createContext, useContext, useMemo, useState } from 'react';
+import toast, { Toaster } from 'react-hot-toast';
 
 type Toast = { id:number; kind:'success'|'error'|'info'; msg:string };
 const ToastCtx = createContext<{ push:(t:Omit<Toast,'id'>)=>void } | null>(null);
@@ -49,6 +50,7 @@ export function MainLayout() {
       <main className="container section">
         <Outlet />
       </main>
+  <Toaster position="bottom-right" />
       {/* Toasts */}
       <div style={{ position:'fixed', right:12, bottom:12, display:'grid', gap:8, width:360 }}>
         {toasts.map(t => (

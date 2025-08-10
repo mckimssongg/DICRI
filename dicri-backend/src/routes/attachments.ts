@@ -6,7 +6,7 @@ import { rbacGuard } from '../middlewares/rbacGuard';
 import { sha256 } from '../utils/hash';
 import { scanBuffer } from '../services/antivirus';
 import { adjuntoCreate, adjuntoDelete, adjuntoGetById, adjuntoUpdateScan, adjuntosListByExpediente } from '../services/attachments';
-import { buildObjectKey, ensureBucket, getPresignedGetUrl, putObject, removeObject } from '../services/storage';
+import { buildObjectKey, ensureBucket, getPresignedGetUrl, putObject, removeObject, getObjectStream, statObject } from '../services/storage';
 
 const router = Router();
 const upload = multer({ storage: multer.memoryStorage(), limits: { fileSize: 20 * 1024 * 1024 } }); // 20MB en memoria
@@ -90,8 +90,16 @@ router.get('/adjuntos/:adjuntoId/download',
     if (adj.scan_status === 'PENDING') return res.status(409).json({ error: 'Escaneando, intenta más tarde' });
     if (adj.scan_status === 'INFECTED') return res.status(423).json({ error: 'Archivo bloqueado por infección' });
 
-    const url = await getPresignedGetUrl(adj.storage_key, 60);
-    res.json({ url, filename: adj.archivo_nombre, mime: adj.mime });
+    // Stream directo desde MinIO para evitar problemas de firma/host
+    const meta = await statObject(adj.storage_key);
+    const stream = await getObjectStream(adj.storage_key);
+  const contentType = adj.mime || meta?.metaData?.['content-type'] || 'application/octet-stream';
+  res.setHeader('Content-Type', contentType);
+  res.setHeader('Content-Disposition', `attachment; filename="${encodeURIComponent(adj.archivo_nombre)}"`);
+  res.setHeader('X-Filename', encodeURIComponent(adj.archivo_nombre));
+    if (meta?.size) res.setHeader('Content-Length', String(meta.size));
+    stream.on('error', () => res.destroy());
+    stream.pipe(res);
   }
 );
 

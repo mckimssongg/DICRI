@@ -81,6 +81,7 @@ function Editable({ exp, enabled, onSaved }:{ exp:any; enabled:boolean; onSaved:
   const [fecha, setFecha] = useState(exp.fecha_registro);
   const [desc, setDesc] = useState(exp.descripcion || '');
   const { id } = useParams();
+  const toast = useToast();
 
   useEffect(()=>{ setEdit(enabled); }, [enabled]);
 
@@ -90,7 +91,8 @@ function Editable({ exp, enabled, onSaved }:{ exp:any; enabled:boolean; onSaved:
     let f = (fecha || '').trim();
     if (/^\d{4}-\d{2}-\d{2}T/.test(f)) f = f.slice(0,10);
     await api.put(`/expedientes/${id}`, { sede_codigo: sede, fecha_registro: f, titulo, descripcion: desc || undefined });
-    setEdit(false); onSaved();
+  setEdit(false); onSaved();
+  toast.push({ kind:'success', msg:'Expediente guardado' });
   }
   catch(e:any){ /* toast en nivel superior */ }
   }
@@ -189,10 +191,28 @@ function ExpAdjuntos({ expedienteId }:{ expedienteId:number }) {
 
   async function descargar(id:number) {
     try {
-      const r = await api.get(`/adjuntos/${id}/download`);
-      const { url, filename } = r.data;
-      const a = document.createElement('a'); a.href = url; a.download = filename || '';
+      const r = await api.get(`/adjuntos/${id}/download`, { responseType: 'blob' });
+      const headers = r.headers as any;
+      let filename = headers['x-filename'] ? decodeURIComponent(headers['x-filename']) : 'archivo.bin';
+      if (!headers['x-filename']) {
+        const disposition = (headers['content-disposition'] as string | undefined) || (headers['Content-Disposition'] as any);
+        if (disposition) {
+          const m = /filename="?([^";]+)"?/i.exec(disposition);
+          if (m) filename = decodeURIComponent(m[1]);
+        }
+      }
+      const type = (headers['content-type'] as string | undefined) || (headers['Content-Type'] as any) || 'application/octet-stream';
+      const blob = new Blob([r.data], { type });
+      // Detección de fallo típico: HTML de Vite dev
+      if (type.includes('text/html') || filename.toLowerCase().endsWith('.htm') || filename.toLowerCase().endsWith('.html')) {
+        toast.push({ kind:'error', msg:'La descarga devolvió HTML (¿proxy dev o ruta incorrecta?). Intenta de nuevo.' });
+        return;
+      }
+      const url = URL.createObjectURL(blob);
+      const a = document.createElement('a'); a.href = url; a.download = filename;
       document.body.appendChild(a); a.click(); a.remove();
+      URL.revokeObjectURL(url);
+  toast.push({ kind:'success', msg:`Descargado: ${filename}` });
     } catch (e:any) {
       toast.push({ kind:'error', msg: mapError(e) });
     }

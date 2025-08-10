@@ -32,7 +32,11 @@ const requestId = (req: Request, _res: Response, next: NextFunction) => {
 app.use(requestId);
 app.use(pinoHttp());
 app.use(helmet());
-app.use(cors({ origin: process.env.CORS_ORIGIN?.split(',') || true, credentials: true }));
+app.use(cors({
+  origin: process.env.CORS_ORIGIN?.split(',') || true,
+  credentials: true,
+  exposedHeaders: ['Content-Disposition', 'Content-Length', 'Content-Type', 'X-Filename'],
+}));
 app.use(express.json({ limit: '5mb' }));
 app.use(rateLimit({ windowMs: 60_000, max: 100 }));
 app.use(cookieParser());

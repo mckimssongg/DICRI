@@ -1,5 +1,6 @@
 import { Client as MinioClient } from 'minio';
 import { randomUUID } from 'crypto';
+import type { Readable } from 'stream';
 
 const minio = new MinioClient({
   endPoint: process.env.MINIO_ENDPOINT || 'localhost',
@@ -44,4 +45,12 @@ export async function getPresignedGetUrl(objectKey: string, expirySec = 60) {
 
 export async function removeObject(objectKey: string) {
   try { await minio.removeObject(bucket, objectKey); } catch { /* idempotente */ }
+}
+
+export async function getObjectStream(objectKey: string): Promise<Readable> {
+  return minio.getObject(bucket, objectKey) as unknown as Readable;
+}
+
+export async function statObject(objectKey: string) {
+  try { return await minio.statObject(bucket, objectKey); } catch { return null; }
 }
