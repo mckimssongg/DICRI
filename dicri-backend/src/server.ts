@@ -42,12 +42,13 @@ app.use('/api/v1/auth', authRouter);
 app.use('/api/v1/rbac', rbacRouter);
 app.use('/api/v1/catalogs', catalogsRouter);
 app.use('/api/v1/users', usersRouter);
+// expedientes 
 app.use('/api/v1/expedientes', expedientesRouter);
-app.use('/api/v1/attachments', attachmentsRouter);
-app.use('/api/v1/indicios', indiciosRouter);
-app.use('/api/v1/reportes', reportesRouter);
+app.use('/api/v1', attachmentsRouter);
+app.use('/api/v1', indiciosRouter);
+app.use('/api/v1', reportesRouter);
 if (process.env.NODE_ENV !== 'production') {
-  app.use('/api/v1/setup', setupRouter);
+  app.use('/api/v1', setupRouter);
 }
 
 app.get('/api-docs.json', (_req, res) => res.json(openApiSpec));

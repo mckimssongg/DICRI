@@ -57,3 +57,16 @@ export async function expedienteDelete(id: number, actor?: string) {
     .execute('core.usp_Expediente_Delete');
   return r.recordset?.[0]?.affected === 1;
 }
+
+export async function expedienteUpdate(id:number, data:{
+  sede_codigo: string; fecha_registro: string; titulo: string; descripcion?: string|null;
+}) {
+  const r = await getPool().request()
+    .input('id', sql.BigInt, id)
+    .input('sede_codigo', sql.NVarChar(10), data.sede_codigo)
+    .input('fecha_registro', sql.Date, data.fecha_registro)
+    .input('titulo', sql.NVarChar(200), data.titulo)
+    .input('descripcion', sql.NVarChar(2000), data.descripcion ?? null)
+    .execute('core.usp_Expediente_Update');
+  return r.recordset?.[0]?.affected === 1;
+}

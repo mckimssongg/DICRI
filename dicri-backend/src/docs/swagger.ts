@@ -128,6 +128,44 @@ export const openApiSpec: OpenAPIV3.Document = {
           },
         },
       },
+      UserItem: {
+        type: "object",
+        properties: {
+          user_id: { type: "integer" },
+          username: { type: "string" },
+          email: { type: "string", nullable: true },
+          is_active: { type: "boolean" },
+          mfa_required: { type: "boolean" },
+          last_login_at: { type: "string", nullable: true },
+          roles: { type: "array", items: { type: "string" } },
+        },
+      },
+      UserListResponse: {
+        type: "object",
+        properties: {
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/UserItem" },
+          },
+          total: { type: "integer" },
+        },
+      },
+      UserUpdateRequest: {
+        type: "object",
+        required: ["email", "is_active", "mfa_required"],
+        properties: {
+          email: { type: "string" },
+          is_active: { type: "boolean" },
+          mfa_required: { type: "boolean" },
+        },
+      },
+      UserPasswordRequest: {
+        type: "object",
+        required: ["password"],
+        properties: {
+          password: { type: "string", example: "Nuev4!Clave" },
+        },
+      },
       PasswordResetRequest: {
         type: "object",
         properties: {
@@ -565,6 +603,35 @@ export const openApiSpec: OpenAPIV3.Document = {
       },
     },
     "/api/v1/users": {
+      get: {
+        tags: ["Usuarios"],
+        summary: "Lista usuarios",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "q", in: "query", schema: { type: "string" } },
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", default: 1 },
+          },
+          {
+            name: "pageSize",
+            in: "query",
+            schema: { type: "integer", default: 20 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UserListResponse" },
+              },
+            },
+          },
+          "403": { description: "Sin permiso" },
+        },
+      },
       post: {
         tags: ["Usuarios"],
         summary: "Crea usuario y asigna roles",
@@ -593,6 +660,102 @@ export const openApiSpec: OpenAPIV3.Document = {
               },
             },
           },
+        },
+      },
+    },
+    "/api/v1/users/{id}": {
+      get: {
+        tags: ["Usuarios"],
+        summary: "Detalle usuario",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/UserItem" },
+              },
+            },
+          },
+          "404": { description: "No encontrado" },
+        },
+      },
+      put: {
+        tags: ["Usuarios"],
+        summary: "Actualizar usuario",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UserUpdateRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "OK" },
+          "404": { description: "No encontrado" },
+        },
+      },
+      delete: {
+        tags: ["Usuarios"],
+        summary: "Deshabilitar usuario",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "204": { description: "No Content" },
+          "404": { description: "No encontrado" },
+        },
+      },
+    },
+
+    "/api/v1/users/{id}/password": {
+      put: {
+        tags: ["Usuarios"],
+        summary: "Cambiar contraseña (admin)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/UserPasswordRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "OK" },
+          "404": { description: "No encontrado" },
         },
       },
     },
@@ -770,6 +933,31 @@ export const openApiSpec: OpenAPIV3.Document = {
       },
     },
     "/api/v1/expedientes/{id}/adjuntos": {
+      put: {
+        tags: ["Expedientes"],
+        summary: "Actualizar expediente (sólo BORRADOR)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ExpedienteCreateRequest" },
+            },
+          },
+        },
+        responses: {
+          "200": { description: "OK" },
+          "409": { description: "Sólo BORRADOR" },
+        },
+      },
       post: {
         tags: ["Adjuntos"],
         summary: "Sube un adjunto al expediente (AV + hash + S3)",
@@ -877,6 +1065,25 @@ export const openApiSpec: OpenAPIV3.Document = {
         responses: {
           "204": { description: "No Content" },
           "404": { description: "No encontrado" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}/resubmit": {
+      post: {
+        tags: ["Expedientes"],
+        summary: "Re-enviar a revisión (desde RECHAZADO)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": { description: "OK" },
+          "409": { description: "Estado inválido" },
         },
       },
     },

@@ -13,7 +13,7 @@ router.post('/setup/seed-admin', async (_req, res) => {
   if (process.env.NODE_ENV === 'production') return res.status(404).send();
   const pool = getPool();
   const username = 'admin';
-  const email = 'admin@dicri.local';
+  const email = 'admin@dicri.test';
   const hash = await bcrypt.hash('Admin123!', 10);
 
   // crea usuario si no existe

@@ -25,3 +25,11 @@ export async function expedienteReject(expedienteId: number, actorId: number, mo
     .execute('core.usp_Expediente_Reject');
   return { status: 'ok' };
 }
+
+export async function expedienteResubmit(expedienteId: number, actorId: number) {
+  await getPool().request()
+    .input('expediente_id', sql.BigInt, expedienteId)
+    .input('actor_id', sql.BigInt, actorId)
+    .execute('core.usp_Expediente_Resubmit');
+  return { status: 'ok' };
+}

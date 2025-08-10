@@ -2,8 +2,8 @@ import { Router } from 'express';
 import { z } from 'zod';
 import { authGuard } from '../middlewares/authGuard';
 import { rbacGuard } from '../middlewares/rbacGuard';
-import { expedienteCreate, expedienteDelete, expedienteGetById, expedienteList } from '../services/expedientes';
-import { expedienteApprove, expedienteReject, expedienteSubmit } from '../services/revision';
+import { expedienteCreate, expedienteDelete, expedienteGetById, expedienteList, expedienteUpdate } from '../services/expedientes';
+import { expedienteApprove, expedienteReject, expedienteSubmit, expedienteResubmit } from '../services/revision';
 
 const router = Router();
 
@@ -93,6 +93,29 @@ router.post('/:id/reject',
     const { motivo } = RejectSchema.parse(req.body);
     await expedienteReject(Number(req.params.id), req.auth!.sub, motivo);
     res.status(200).json({ status: 'ok' });
+  }
+);
+
+/* PUT /expedientes/:id (sólo BORRADOR) */
+const UpdateSchema = CreateSchema; // mismos campos que create
+router.put('/:id',
+  authGuard(),
+  rbacGuard(['expediente.update']),
+  async (req,res) => {
+    const id = Number(req.params.id);
+    const p = UpdateSchema.parse(req.body);
+    const ok = await expedienteUpdate(id, p);
+    return res.status(ok ? 200 : 409).json(ok ? { ok:true } : { error: 'Sólo BORRADOR' });
+  }
+);
+
+/* POST /expedientes/:id/resubmit (RECHAZADO -> EN_REVISION) */
+router.post('/:id/resubmit',
+  authGuard(),
+  rbacGuard(['expediente.update','expediente.create']),
+  async (req,res) => {
+    await expedienteResubmit(Number(req.params.id), req.auth!.sub);
+    res.status(200).json({ status:'ok' });
   }
 );
 

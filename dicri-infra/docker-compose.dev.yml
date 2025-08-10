@@ -28,7 +28,6 @@ services:
       - sqlserver
       - minio
       - clamav
-      - redis
     ports:
       - "3000:3000"
 
@@ -42,11 +41,6 @@ services:
       - api
     ports:
       - "5173:5173"
-
-  redis:
-    image: redis:7-alpine
-    ports:
-      - "6379:6379"
 
   minio:
     image: quay.io/minio/minio
