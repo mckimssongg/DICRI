@@ -36,7 +36,7 @@ export function ExpedienteCreatePage() {
     <form onSubmit={handleSubmit(onSubmit)} className="card form" style={{ maxWidth:560, padding:16 }}>
       <h2 style={{ marginTop:0 }}>Nuevo expediente</h2>
       <div className="field"><span className="label">Sede</span><input className="input" {...register('sede_codigo')} />{errors.sede_codigo && <small style={{ color:'crimson' }}>{errors.sede_codigo.message}</small>}</div>
-      <div className="field"><span className="label">Fecha</span><input className="input" placeholder="YYYY-MM-DD" {...register('fecha_registro')} />{errors.fecha_registro && <small style={{ color:'crimson' }}>{errors.fecha_registro.message}</small>}</div>
+  <div className="field"><span className="label">Fecha</span><input className="input" type="date" {...register('fecha_registro')} />{errors.fecha_registro && <small style={{ color:'crimson' }}>{errors.fecha_registro.message}</small>}</div>
       <div className="field"><span className="label">Título</span><input className="input" {...register('titulo')} />{errors.titulo && <small style={{ color:'crimson' }}>{errors.titulo.message}</small>}</div>
       <div className="field"><span className="label">Descripción</span><textarea className="textarea" {...register('descripcion')} /></div>
       <button className="btn primary" type="submit">Crear</button>

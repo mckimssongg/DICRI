@@ -64,3 +64,5 @@ dicri-backend/dist/services/storage.js
 dicri-backend/dist/services/users.js
 dicri-backend/dist/utils/hash.js
 dicri-backend/dist/utils/jwt.js
+dicri-frontend/dist/assets/
+dicri-frontend/dist/assets/

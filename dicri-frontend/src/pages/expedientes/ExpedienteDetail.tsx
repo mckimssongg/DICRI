@@ -78,7 +78,7 @@ function Editable({ exp, enabled, onSaved }:{ exp:any; enabled:boolean; onSaved:
   const [edit, setEdit] = useState(enabled);
   const [titulo, setTitulo] = useState(exp.titulo);
   const [sede, setSede] = useState(exp.sede_codigo);
-  const [fecha, setFecha] = useState(exp.fecha_registro);
+  const [fecha, setFecha] = useState((exp.fecha_registro||'').slice(0,10));
   const [desc, setDesc] = useState(exp.descripcion || '');
   const { id } = useParams();
   const toast = useToast();
@@ -110,7 +110,7 @@ function Editable({ exp, enabled, onSaved }:{ exp:any; enabled:boolean; onSaved:
     <div className="card form" style={{ maxWidth:560, padding:12, marginTop:12 }}>
       <div className="field"><span className="label">Título</span><input className="input" value={titulo} onChange={e=>setTitulo(e.target.value)} /></div>
       <div className="field"><span className="label">Sede</span><input className="input" value={sede} onChange={e=>setSede(e.target.value)} /></div>
-      <div className="field"><span className="label">Fecha</span><input className="input" value={fecha} onChange={e=>setFecha(e.target.value)} /></div>
+  <div className="field"><span className="label">Fecha</span><input className="input" type="date" value={fecha} onChange={e=>setFecha(e.target.value)} /></div>
       <div className="field"><span className="label">Descripción</span><textarea className="textarea" value={desc} onChange={e=>setDesc(e.target.value)} /></div>
       <div className="hstack">
         <button className="btn primary" onClick={save}>Guardar</button>

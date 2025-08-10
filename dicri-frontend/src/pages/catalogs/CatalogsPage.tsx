@@ -57,7 +57,7 @@ export function CatalogsPage() {
         <section key={c.key}>
           <h3>{c.label}</h3>
           {errors[c.key] ? <div style={{ color:'crimson' }}>{errors[c.key]}</div> : (
-            <table>
+            <table className="card" style={{ width:'100%', borderCollapse:'collapse' }}>
               <thead><tr><th>Code</th><th>Label</th><th>Orden</th><th>Activo</th><th /></tr></thead>
               <tbody>
                 {(data[c.key] || []).map((it:any) => (
@@ -66,7 +66,7 @@ export function CatalogsPage() {
                     <td>{hasPerm('catalogs.write') ? <input value={it.label} onChange={e=>{ it.label=e.target.value; setData(d=>({...d})) }} onBlur={()=>updateItem(it)} /> : it.label}</td>
                     <td>{hasPerm('catalogs.write') ? <input style={{ width:60 }} type="number" value={it.sort_order} onChange={e=>{ it.sort_order=Number(e.target.value||0); setData(d=>({...d})) }} onBlur={()=>updateItem(it)} /> : it.sort_order}</td>
                     <td>{hasPerm('catalogs.write') ? <input type="checkbox" checked={!!it.is_active} onChange={e=>{ it.is_active=e.target.checked; setData(d=>({...d})); updateItem(it); }} /> : String(it.is_active)}</td>
-                    <td>{hasPerm('catalogs.write') && <button onClick={()=>deleteItem(c.key, it.item_id)}>Eliminar</button>}</td>
+                    <td>{hasPerm('catalogs.write') && <button className="btn danger" onClick={()=>deleteItem(c.key, it.item_id)}>Eliminar</button>}</td>
                   </tr>
                 ))}
                 {hasPerm('catalogs.write') && (
@@ -75,7 +75,7 @@ export function CatalogsPage() {
                     <td><input placeholder="label" value={creating[c.key]?.label || ''} onChange={e=>setCreating(s=>({ ...s, [c.key]: { ...(s[c.key]||{ code:'', label:'', sort_order:0 }), label: e.target.value } }))} /></td>
                     <td><input type="number" style={{ width:60 }} value={creating[c.key]?.sort_order ?? 0} onChange={e=>setCreating(s=>({ ...s, [c.key]: { ...(s[c.key]||{ code:'', label:'', sort_order:0 }), sort_order: Number(e.target.value||0) } }))} /></td>
                     <td></td>
-                    <td><button onClick={()=>createItem(c.key)}>Agregar</button></td>
+                    <td><button className="btn" onClick={()=>createItem(c.key)}>Agregar</button></td>
                   </tr>
                 )}
               </tbody>
