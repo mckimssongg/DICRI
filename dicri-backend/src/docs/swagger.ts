@@ -12,7 +12,7 @@ export const openApiSpec: OpenAPIV3.Document = {
   components: {
     securitySchemes: {
       bearerAuth: { type: "http", scheme: "bearer", bearerFormat: "JWT" },
-      cookieAuth: { type: "apiKey", in: "cookie", name: "refresh_token" }
+      cookieAuth: { type: "apiKey", in: "cookie", name: "refresh_token" },
     },
     schemas: {
       LoginRequest: {
@@ -108,8 +108,12 @@ export const openApiSpec: OpenAPIV3.Document = {
           password: { type: "string", example: "Str0ng!Pass" },
           email: { type: "string", example: "coord1@mp.gob.gt" },
           mfa_required: { type: "boolean", example: false },
-          roles: { type: "array", items: { type: "string" }, example: ["coordinador"] }
-        }
+          roles: {
+            type: "array",
+            items: { type: "string" },
+            example: ["coordinador"],
+          },
+        },
       },
       CreateUserResponse: {
         type: "object",
@@ -117,23 +121,67 @@ export const openApiSpec: OpenAPIV3.Document = {
           id: { type: "integer", example: 2 },
           username: { type: "string", example: "coordinador1" },
           email: { type: "string", example: "coord1@mp.gob.gt" },
-          roles: { type: "array", items: { type: "string" }, example: ["coordinador"] }
-        }
+          roles: {
+            type: "array",
+            items: { type: "string" },
+            example: ["coordinador"],
+          },
+        },
       },
       PasswordResetRequest: {
         type: "object",
         properties: {
           username: { type: "string", example: "admin" },
-          email: { type: "string", example: "admin@mp.gob.gt" }
-        }
+          email: { type: "string", example: "admin@mp.gob.gt" },
+        },
       },
       PasswordResetConfirm: {
         type: "object",
         required: ["token", "newPassword"],
         properties: {
           token: { type: "string", example: "reset-token-123" },
-          newPassword: { type: "string", example: "Nuev4!Clave" }
-        }
+          newPassword: { type: "string", example: "Nuev4!Clave" },
+        },
+      },
+      ExpedienteCreateRequest: {
+        type: "object",
+        required: ["sede_codigo", "fecha_registro", "titulo"],
+        properties: {
+          sede_codigo: { type: "string", example: "GUA" },
+          fecha_registro: { type: "string", example: "2025-08-10" },
+          titulo: { type: "string", example: "Homicidio zona 7" },
+          descripcion: { type: "string", nullable: true },
+        },
+      },
+      ExpedienteCreateResponse: {
+        type: "object",
+        properties: {
+          expediente_id: { type: "integer" },
+          folio: { type: "string", example: "GUA-2025-000001" },
+        },
+      },
+      ExpedienteItem: {
+        type: "object",
+        properties: {
+          expediente_id: { type: "integer" },
+          folio: { type: "string" },
+          sede_codigo: { type: "string" },
+          fecha_registro: { type: "string" },
+          titulo: { type: "string" },
+          descripcion: { type: "string", nullable: true },
+          tecnico_id: { type: "integer" },
+          estado: { type: "string" },
+        },
+      },
+      ExpedienteListResponse: {
+        type: "object",
+        properties: {
+          items: {
+            type: "array",
+            items: { $ref: "#/components/schemas/ExpedienteItem" },
+          },
+          total: { type: "integer" },
+        },
       },
     },
   },
@@ -421,72 +469,203 @@ export const openApiSpec: OpenAPIV3.Document = {
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/CreateUserRequest" } }
-          }
+            "application/json": {
+              schema: { $ref: "#/components/schemas/CreateUserRequest" },
+            },
+          },
         },
         responses: {
           "201": {
             description: "Creado",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/CreateUserResponse" } }
-            }
+              "application/json": {
+                schema: { $ref: "#/components/schemas/CreateUserResponse" },
+              },
+            },
           },
           "400": {
             description: "Datos inválidos",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
-            }
-          }
-        }
-      }
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
     },
     "/api/v1/auth/reset/request": {
       post: {
-        tags: ["Auth"], security: [],
+        tags: ["Auth"],
+        security: [],
         summary: "Solicita reset de contraseña (siempre 202)",
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/PasswordResetRequest" } }
-          }
+            "application/json": {
+              schema: { $ref: "#/components/schemas/PasswordResetRequest" },
+            },
+          },
         },
         responses: {
           "202": { description: "Enviado (o silenciado si no existe)" },
           "400": {
             description: "Datos inválidos",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
-            }
-          }
-        }
-      }
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
     },
     "/api/v1/auth/reset/confirm": {
       post: {
-        tags: ["Auth"], security: [],
+        tags: ["Auth"],
+        security: [],
         summary: "Confirma reset con token",
         requestBody: {
           required: true,
           content: {
-            "application/json": { schema: { $ref: "#/components/schemas/PasswordResetConfirm" } }
-          }
+            "application/json": {
+              schema: { $ref: "#/components/schemas/PasswordResetConfirm" },
+            },
+          },
         },
         responses: {
           "200": { description: "OK" },
           "400": {
             description: "Inválido",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
-            }
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
           },
           "410": {
             description: "Expirado",
             content: {
-              "application/json": { schema: { $ref: "#/components/schemas/ErrorResponse" } }
-            }
-          }
-        }
-      }
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ErrorResponse" },
+              },
+            },
+          },
+        },
+      },
+    },
+    "/api/v1/expedientes": {
+      get: {
+        tags: ["Expedientes"],
+        summary: "Lista de expedientes (paginado)",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          { name: "folio", in: "query", schema: { type: "string" } },
+          { name: "sede_codigo", in: "query", schema: { type: "string" } },
+          {
+            name: "desde",
+            in: "query",
+            schema: { type: "string" },
+            description: "YYYY-MM-DD",
+          },
+          {
+            name: "hasta",
+            in: "query",
+            schema: { type: "string" },
+            description: "YYYY-MM-DD",
+          },
+          {
+            name: "page",
+            in: "query",
+            schema: { type: "integer", default: 1 },
+          },
+          {
+            name: "pageSize",
+            in: "query",
+            schema: { type: "integer", default: 20 },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ExpedienteListResponse" },
+              },
+            },
+          },
+        },
+      },
+      post: {
+        tags: ["Expedientes"],
+        summary: "Crea expediente (folio único por sede+año)",
+        security: [{ bearerAuth: [] }],
+        requestBody: {
+          required: true,
+          content: {
+            "application/json": {
+              schema: { $ref: "#/components/schemas/ExpedienteCreateRequest" },
+            },
+          },
+        },
+        responses: {
+          "201": {
+            description: "Creado",
+            content: {
+              "application/json": {
+                schema: {
+                  $ref: "#/components/schemas/ExpedienteCreateResponse",
+                },
+              },
+            },
+          },
+          "400": { description: "Datos inválidos" },
+          "403": { description: "Sin permiso" },
+        },
+      },
+    },
+    "/api/v1/expedientes/{id}": {
+      get: {
+        tags: ["Expedientes"],
+        summary: "Detalle por ID",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "200": {
+            description: "OK",
+            content: {
+              "application/json": {
+                schema: { $ref: "#/components/schemas/ExpedienteItem" },
+              },
+            },
+          },
+          "404": { description: "No encontrado" },
+        },
+      },
+      delete: {
+        tags: ["Expedientes"],
+        summary: "Elimina (soft) expediente",
+        security: [{ bearerAuth: [] }],
+        parameters: [
+          {
+            name: "id",
+            in: "path",
+            required: true,
+            schema: { type: "integer" },
+          },
+        ],
+        responses: {
+          "204": { description: "No Content" },
+          "404": { description: "No encontrado" },
+        },
+      },
     },
   },
 };
