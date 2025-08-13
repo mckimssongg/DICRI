@@ -8,6 +8,7 @@ const catalogs = [
   { key:'tipos_indicio', label:'Tipos de indicio' },
   { key:'ubicaciones', label:'Ubicaciones' },
   { key:'unidades', label:'Unidades' },
+  { key:'precio', label:'Precio' },
 ];
 
 export function CatalogsPage() {
